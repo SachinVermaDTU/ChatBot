@@ -24,7 +24,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
@@ -35,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -105,6 +108,8 @@ class MainActivity : ComponentActivity() {
         val chatViewModel = viewModel<ChatViewModel>()
         val chatState = chatViewModel.chatState.collectAsState().value
         val bitmap = getBitmap()
+
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -119,14 +124,23 @@ class MainActivity : ComponentActivity() {
                 reverseLayout = true
             ) {
                 itemsIndexed(chatState.chatList) { index, chat ->
-                    if(chat.isFromUser){
-                        UserChatItem(
-                              prompt = chat.prompt,
-                              bitmap = chat.bitmap)
-                    }
-                    else{
-                        ModelChatItem(prompt = chat.prompt)
-                    }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = if (chat.isFromUser) Arrangement.End else Arrangement.Start
+                        ) {
+                            if (chat.isFromUser) {
+                                UserChatItem(
+                                    prompt = chat.prompt,
+                                    bitmap = chat.bitmap
+                                )
+                            } else {
+                                ModelChatItem(prompt = chat.prompt)
+                            }
+                        }
+
                 }
             }
             Row(
@@ -169,7 +183,7 @@ class MainActivity : ComponentActivity() {
                 Spacer(modifier = Modifier.width(2.dp))
 
                 TextField(
-                    modifier = Modifier.width(200.dp),
+                    modifier = Modifier.width(400.dp),
                     value = chatState.prompt,
                     onValueChange ={
                         chatViewModel.onEvent(ChatUiEvents.UpdatePrompt(it))
@@ -184,7 +198,7 @@ class MainActivity : ComponentActivity() {
                         .padding(4.dp)
 
                         .clickable {
-                           chatViewModel.onEvent(ChatUiEvents.SendPrompt(chatState.prompt, bitmap))
+                            chatViewModel.onEvent(ChatUiEvents.SendPrompt(chatState.prompt, bitmap))
                         },
                     imageVector = Icons.Rounded.Send,
                     contentDescription = "Send prompt",
@@ -195,25 +209,37 @@ class MainActivity : ComponentActivity() {
     }
     @Composable
     fun ModelChatItem(prompt : String ){
-       Column(
-           modifier = Modifier.padding(start = 100.dp , bottom = 22.dp)
+       Row(
+           modifier = Modifier.padding( bottom = 22.dp , end = 43.dp)
        ) {
 
+           Surface(
+               modifier = Modifier
+
+                   .padding(bottom = 8.dp),
+               shape = RoundedCornerShape(12.dp), // Increased corner radius
+               color = MaterialTheme.colorScheme.background, // Use primary color for user chat
+               shadowElevation = 2.dp // Subtle elevation
+           ) {
+               SelectionContainer {
           Text(
               modifier = Modifier
-                  .fillMaxWidth()
-                  
+
+                  .fillMaxSize(0.8f)
+                  .selectable(selected = true, onClick = {})
                   .background(MaterialTheme.colorScheme.primary),
+
                  text = prompt,
                  fontSize = 17.sp,
                  color = MaterialTheme.colorScheme.onTertiary
           )
+           }}
        }
     }
     @Composable
     fun UserChatItem(prompt : String , bitmap: Bitmap?){
-        Column(
-            modifier = Modifier.padding(start = 100.dp , bottom = 22.dp)
+        Row(
+            modifier = Modifier.padding( bottom = 6.dp)
         ) {
             bitmap?.let{
                 Image(
@@ -227,15 +253,24 @@ class MainActivity : ComponentActivity() {
                     bitmap = it.asImageBitmap()
                 )
             }
-            Text(
+            Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary),
-                text = prompt,
-                fontSize = 17.sp,
-                color = MaterialTheme.colorScheme.onTertiary
-            )
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(16.dp), // Increased corner radius
+                color = MaterialTheme.colorScheme.primary, // Use primary color for user chat
+                shadowElevation = 2.dp // Subtle elevation
+            ) {
+                SelectionContainer {
+                Text(
+                    modifier = Modifier
+                        .selectable(selected = true, onClick = {})
+                        .fillMaxSize(0.8f)
+                        .background(MaterialTheme.colorScheme.primary),
+                    text = prompt,
+                    fontSize = 17.sp,
+                    color = MaterialTheme.colorScheme.onTertiary
+                )
+            }}
         }
     }
 
